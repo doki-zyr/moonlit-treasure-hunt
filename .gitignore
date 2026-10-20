@@ -1,0 +1,13 @@
+# Local test and publishing artifacts
+.chrome-test-profile*/
+qa-*.png
+qa-*.mjs
+server.*.log
+tunnel*.log
+.ssh-known-hosts
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

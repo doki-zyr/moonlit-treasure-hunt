@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07111f">
+  <title>月蚀寻宝录 · JavaScript 异步冒险</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="ambient-grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span>✦</span>
+        </div>
+        <div class="brand-copy">
+          <p>THE MOONLIT RELIC</p>
+          <h1>月蚀寻宝录</h1>
+        </div>
+      </div>
+
+      <div class="status-strip" aria-label="旅程状态">
+        <div class="stat">
+          <span>旅途</span>
+          <strong id="progressLabel">序章</strong>
+        </div>
+        <div class="stat">
+          <span>线索</span>
+          <strong id="clueCount">00</strong>
+        </div>
+        <div class="stat">
+          <span>幸运</span>
+          <strong id="luckCount">✦</strong>
+        </div>
+        <div class="timer" title="本次寻宝用时">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="13" r="8"></circle>
+            <path d="M12 9v4l2.5 1.5M9 2h6"></path>
+          </svg>
+          <span id="timer">00:00</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="icon-button" id="soundBtn" type="button" aria-label="关闭音效" title="音效">
+          <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z"></path>
+            <path d="M16 9.5a4 4 0 0 1 0 5M19 7a8 8 0 0 1 0 10"></path>
+          </svg>
+          <svg class="sound-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z"></path>
+            <path d="m16 9 5 5m0-5-5 5"></path>
+          </svg>
+        </button>
+        <button class="ghost-button" id="restartBtn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"></path>
+          </svg>
+          重新启程
+        </button>
+      </div>
+    </header>
+
+    <main class="game-layout">
+      <section class="map-panel" aria-label="寻宝地图">
+        <div class="scene-frame" id="sceneFrame" data-scene="library">
+          <div class="sky" aria-hidden="true">
+            <div class="stars" id="starField"></div>
+            <div class="aurora"></div>
+            <div class="moon-wrap">
+              <div class="moon-halo"></div>
+              <div class="moon">
+                <span class="crater c1"></span>
+                <span class="crater c2"></span>
+                <span class="crater c3"></span>
+              </div>
+            </div>
+            <div class="cloud cloud-a"></div>
+            <div class="cloud cloud-b"></div>
+            <div class="cloud cloud-c"></div>
+          </div>
+
+          <div class="map-viewport" id="mapViewport">
+            <div class="map-scene" id="mapScene">
+              <div class="far-hills" aria-hidden="true">
+                <span class="hill h1"></span>
+                <span class="hill h2"></span>
+                <span class="hill h3"></span>
+              </div>
+              <div class="ground" aria-hidden="true"></div>
+
+              <svg class="route-map" viewBox="0 0 1400 720" preserveAspectRatio="none" aria-hidden="true">
+                <path class="route-shadow" d="M250 530 C 315 525, 285 475, 360 485 S 470 515, 565 490 S 670 408, 778 440 S 905 492, 990 458 S 1110 430, 1225 500"></path>
+                <path class="route-line" d="M250 530 C 315 525, 285 475, 360 485 S 470 515, 565 490 S 670 408, 778 440 S 905 492, 990 458 S 1110 430, 1225 500"></path>
+                <path class="route-glow" id="routeProgress" d="M250 530 C 315 525, 285 475, 360 485 S 470 515, 565 490 S 670 408, 778 440 S 905 492, 990 458 S 1110 430, 1225 500"></path>
+              </svg>
+
+              <div class="landmark library" data-landmark="0">
+                <div class="library-spire"></div>
+                <div class="library-roof"></div>
+                <div class="library-body">
+                  <div class="library-arch">
+                    <span class="arch-window w1"></span>
+                    <span class="arch-window w2"></span>
+                    <span class="arch-window w3"></span>
+                    <span class="library-door"></span>
+                  </div>
+                </div>
+                <div class="landmark-tag"><b>01</b><span>月蚀图书馆</span></div>
+              </div>
+
+              <div class="landmark forest" data-landmark="2">
+                <span class="pine p1"></span>
+                <span class="pine p2"></span>
+                <span class="pine p3"></span>
+                <span class="pine p4"></span>
+                <span class="pine p5"></span>
+                <div class="forest-light"></div>
+                <div class="landmark-tag"><b>02</b><span>雾隐森林</span></div>
+              </div>
+
+              <div class="landmark temple" data-landmark="3">
+                <div class="temple-roof"></div>
+                <div class="temple-crown">✦</div>
+                <div class="temple-facade">
+                  <span class="column col1"></span>
+                  <span class="column col2"></span>
+                  <span class="column col3"></span>
+                  <span class="column col4"></span>
+                  <span class="temple-door"></span>
+                </div>
+                <div class="temple-steps s1"></div>
+                <div class="temple-steps s2"></div>
+                <div class="guardian" id="guardian" aria-hidden="true">
+                  <span class="guardian-head"></span>
+                  <span class="guardian-body"></span>
+                  <span class="guardian-spear"></span>
+                </div>
+                <div class="landmark-tag"><b>03</b><span>回响神庙</span></div>
+              </div>
+
+              <div class="landmark altar" data-landmark="5">
+                <div class="altar-rays"></div>
+                <div class="altar-crystal"></div>
+                <div class="altar-base"></div>
+                <div class="treasure-chest" id="treasureChest">
+                  <span class="chest-lid"></span>
+                  <span class="chest-body"></span>
+                  <span class="chest-lock">✦</span>
+                  <span class="chest-light"></span>
+                </div>
+                <div class="landmark-tag"><b>04</b><span>星辉祭坛</span></div>
+              </div>
+
+              <div class="fireflies" aria-hidden="true">
+                <span style="--x: 35%; --y: 58%; --d: 6s; --delay: -1s"></span>
+                <span style="--x: 39%; --y: 47%; --d: 7s; --delay: -3s"></span>
+                <span style="--x: 43%; --y: 62%; --d: 5s; --delay: -2s"></span>
+                <span style="--x: 46%; --y: 52%; --d: 8s; --delay: -4s"></span>
+                <span style="--x: 32%; --y: 42%; --d: 9s; --delay: -5s"></span>
+                <span style="--x: 41%; --y: 36%; --d: 6.5s; --delay: -.5s"></span>
+              </div>
+
+              <div class="player" id="player" aria-label="寻宝者位置">
+                <span class="player-halo"></span>
+                <span class="player-pin">
+                  <svg viewBox="0 0 32 40" aria-hidden="true">
+                    <path class="pin-body" d="M16 1C8.3 1 2 7.1 2 14.7 2 25.1 16 38 16 38s14-12.9 14-23.3C30 7.1 23.7 1 16 1Z"></path>
+                    <circle cx="16" cy="14.5" r="5.3"></circle>
+                    <path class="pin-spark" d="m16 9.5.9 3.2 3.2.9-3.2.9-.9 3.2-.9-3.2-3.2-.9 3.2-.9.9-3.2Z"></path>
+                  </svg>
+                </span>
+                <span class="player-number">YOU</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mist-layer mist-a" aria-hidden="true"></div>
+          <div class="mist-layer mist-b" aria-hidden="true"></div>
+          <div class="scene-vignette" aria-hidden="true"></div>
+
+          <div class="chapter-plaque">
+            <span class="chapter-kicker" id="chapterKicker">序章 · THE PROLOGUE</span>
+            <h2 id="chapterTitle">月蚀之夜</h2>
+            <p id="chapterSub">一封没有署名的邀请函，把你带到了这里</p>
+          </div>
+
+          <div class="map-bottom">
+            <div class="map-hint" id="mapHint">
+              <span class="hint-compass" aria-hidden="true">✧</span>
+              <span id="mapHintText">点击右侧「翻开航海日志」开始你的旅程</span>
+            </div>
+            <div class="timeline-pips" id="timelinePips" aria-label="寻宝进度">
+              <span class="pip active"></span>
+              <span class="pip"></span>
+              <span class="pip"></span>
+              <span class="pip"></span>
+              <span class="pip"></span>
+              <span class="pip"></span>
+            </div>
+          </div>
+
+          <div class="scene-flash" id="sceneFlash" aria-hidden="true"></div>
+        </div>
+
+        <div class="journal">
+          <div class="journal-head">
+            <span><i></i> 旅途手记</span>
+            <span class="journal-index">LOGBOOK / <b id="logCount">00</b></span>
+          </div>
+          <div class="log-list" id="logList" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <aside class="story-panel" aria-label="剧情与行动">
+        <div class="panel-scroll">
+          <div class="panel-meta">
+            <span id="chapterProgress">PROLOGUE / 00</span>
+            <span class="async-status" id="asyncStatus"><i></i> 等待启程</span>
+          </div>
+
+          <div class="panel-heading">
+            <h2 id="panelTitle">一封没有署名的邀请函</h2>
+            <p id="panelDesc">传闻每逢月蚀，回响神庙都会归还一件被时间遗忘的宝物。你带着一张残缺的星图，在午夜前抵达了古老的图书馆。</p>
+          </div>
+
+          <div class="objective-card">
+            <div class="objective-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z"></path>
+                <circle cx="12" cy="10" r="2.5"></circle>
+              </svg>
+            </div>
+            <div>
+              <span>当前目标</span>
+              <p id="objectiveText">在第七排书架，找到那本会呼吸的航海日志。</p>
+            </div>
+          </div>
+
+          <div class="choice-area" id="choiceArea">
+            <button class="primary-action" id="startQuestBtn" type="button">
+              <span>翻开航海日志</span>
+              <span class="button-arrow">→</span>
+            </button>
+          </div>
+
+          <div class="panel-divider"></div>
+
+          <div class="quote-card">
+            <span class="quote-mark">“</span>
+            <p id="quoteText">有些路，只有在你迈出第一步之后，才会从雾里显出来。</p>
+            <span class="quote-source">—— 《月蚀寻宝录》</span>
+          </div>
+
+          <div class="code-note">
+            <span class="code-chip">async</span>
+            <span class="code-chip">await</span>
+            <p>每一段旅程都在等待上一个 Promise 落定，再继续向前。</p>
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <span class="save-dot"></span>
+          <span>月影历 · 第七夜</span>
+          <button class="text-button" id="helpBtn" type="button">玩法</button>
+        </div>
+      </aside>
+    </main>
+
+    <div class="intro" id="intro">
+      <div class="intro-stars" aria-hidden="true"></div>
+      <div class="intro-moon" aria-hidden="true"></div>
+      <div class="intro-card">
+        <p class="intro-eyebrow">A JAVASCRIPT ASYNC ADVENTURE</p>
+        <h1>月蚀<span>寻宝录</span></h1>
+        <p class="intro-lead">当最后一缕月光掠过神庙，<br>一段被星砂封存的往事正在苏醒。</p>
+        <div class="intro-runes" aria-hidden="true">
+          <span>☾</span><i></i><span>✦</span><i></i><span>◇</span>
+        </div>
+        <button class="start-button" id="startBtn" type="button">
+          <span>踏入月影</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13m-5-5 5 5-5 5"></path>
+          </svg>
+        </button>
+        <p class="intro-note">一段约 3 分钟的异步寻宝旅程 · 建议开启声音</p>
+      </div>
+      <div class="intro-footer">
+        <span>EXPERIMENT 02 / ASYNCHRONOUS JAVASCRIPT</span>
+        <span>点击开始以启用音效</span>
+      </div>
+    </div>
+
+    <div class="ending" id="ending" hidden>
+      <div class="ending-glow" aria-hidden="true"></div>
+      <div class="ending-card">
+        <p class="ending-eyebrow">THE RELIC IS YOURS</p>
+        <div class="relic" aria-hidden="true">
+          <span class="relic-ring r1"></span>
+          <span class="relic-ring r2"></span>
+          <span class="relic-core">✦</span>
+        </div>
+        <h2>你找到了<span>月蚀星砂</span></h2>
+        <p class="ending-text" id="endingText">一粒能记住所有夜空的沙。它在你掌心微微发亮，像是在等待下一个故事。</p>
+        <div class="ending-stats">
+          <div><span>寻宝用时</span><strong id="endTime">00:00</strong></div>
+          <div><span>拾得线索</span><strong id="endClues">0</strong></div>
+          <div><span>幸运加成</span><strong id="endLuck">0</strong></div>
+        </div>
+        <div class="ending-quote">真正的宝藏，是你在迷雾里没有丢下好奇心。</div>
+        <button class="primary-action ending-button" id="replayBtn" type="button">
+          <span>再走一次月影之路</span>
+          <span class="button-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status">
+      <span class="toast-icon">✦</span>
+      <span id="toastText"></span>
+    </div>
+
+    <div class="modal" id="helpModal" hidden>
+      <div class="modal-card">
+        <span class="modal-eyebrow">HOW TO PLAY</span>
+        <h2>循着星光向前</h2>
+        <p>阅读每一段手记，点击右侧行动按钮推进故事。遇到岔路时，不同选择会带来不同的线索与幸运值。</p>
+        <p>星盘谜题需要按手记中提示的顺序点亮符文；走错不会结束旅程，可以重新观察。</p>
+        <button class="ghost-button modal-close" id="closeHelpBtn" type="button">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="treasure.js"></script>
+</body>
+</html>

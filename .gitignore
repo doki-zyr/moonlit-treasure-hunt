@@ -5,6 +5,7 @@ qa-*.mjs
 server.*.log
 tunnel*.log
 .ssh-known-hosts
+.merkle-snapshot.json
 
 # Editor and OS files
 .DS_Store
